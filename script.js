@@ -26,26 +26,83 @@ function operate(op, a, b){
 
     return opFunc(a,b);
 }
-function upDisplay(){
-    const display = document.getElementById("screen");
-    display.textContent = localStorage.getItem("display");
-}
-function numberClick(button){
-    console.log(button.target.dataset.key);
-    const number = button.target.dataset.key;
-    const curentDisplay = localStorage.getItem("display");
-    if (curentDisplay == "0"){
-        localStorage.setItem("display", `${number}`);
+function upDisplay(numberStr){
+    const screenElement = document.getElementById("screen");
+    if (numberStr.length > 14){ //max 15 digits
+        numberStr = numberStr.slice(0,14);
     }
-    else localStorage.setItem("display", `${curentDisplay}${number}`);
-    upDisplay();
+    screenElement.textContent = numberStr;
+    localStorage.setItem("secondNumber", numberStr);
 }
 
-//adding eventlisteners to the number buttons
-const numButtons = document.querySelectorAll("button[id=number]");
+function numberClick(button){
+    const number = button.target.dataset.key;
+    const currentDisplay = document.getElementById("screen").textContent;
+    let newNum;
+    if(window.localStorage.getItem("newNum") == "true"){
+        newNum = number;
+    }
+    else{
+        newNum = `${currentDisplay}${number}`;
+    }
+    upDisplay(newNum);
+    window.localStorage.setItem("newNum", "false");
+
+}
+
+function opsPress(button){
+    const op = button.target.dataset.key;
+    const currentDisplay = document.getElementById("screen").textContent;
+
+    equalPressed();
+    window.localStorage.setItem("newNum", "true");
+    window.localStorage.setItem("firstNumber", localStorage.getItem("secondNumber"));
+    window.localStorage.setItem("secondNumber", "0");
+    window.localStorage.setItem("op", op);
+}
+
+function equalPressed(){
+    const firstNum = parseFloat(localStorage.getItem("firstNumber"));
+    const secondNum = parseFloat(localStorage.getItem("secondNumber"));
+    const op = localStorage.getItem("op");
+
+    console.log(firstNum, secondNum, op);
+     
+    const result = operate(op, firstNum, secondNum).toString();
+
+    upDisplay(result);
+    window.localStorage.setItem("newNum", "true");
+    window.localStorage.setItem("firstNumber", "0");
+    window.localStorage.setItem("op", "+");
+}
+function clearCalc(){
+    upDisplay("0");
+    window.localStorage.clear();
+    window.localStorage.setItem("firstNumber", "0");
+    window.localStorage.setItem("secondNumber", "0");
+    window.localStorage.setItem("op", "+");
+    window.localStorage.setItem("newNum", "true");
+}
+
+//reset button
+const clearBtn = document.getElementById("clear");
+clearBtn.addEventListener("click", clearCalc);
+
+//number buttons
+const numButtons = document.querySelectorAll("button[id='number']");
 numButtons.forEach(button => {
     button.addEventListener("click", numberClick);
 });
 
-window.localStorage.setItem("display", "0");
-upDisplay();
+//oparation button
+const opsButtons = document.querySelectorAll("button[id='ops']");
+opsButtons.forEach(button => {
+    button.addEventListener("click", opsPress);
+});
+
+//equal
+const equalButton = document.getElementById("equals");
+equalButton.addEventListener("click", equalPressed);
+
+//clear screen and restart local values
+clearCalc();
